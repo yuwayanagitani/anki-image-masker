@@ -8,7 +8,7 @@
 
 This add-on is officially published on **AnkiWeb**:
 
-👉 https://ankiweb.net/shared/info/553055768 :contentReference[oaicite:1]{index=1}
+👉 https://ankiweb.net/shared/info/553055768
 
 Installing from AnkiWeb is recommended for easy setup and **automatic updates**.
 
