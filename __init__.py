@@ -7,6 +7,7 @@ import os
 import re
 import time
 import urllib.request
+import urllib.error
 import uuid
 import copy
 from typing import Any, Optional, cast
@@ -49,10 +50,7 @@ ADDON_DIR = os.path.dirname(__file__)
 MODEL_NAME_DEFAULT = "Image Masker"
 FIELD_IMAGEFILE = "ImageFile"
 FIELD_IMAGEHTML = "ImageHTML"
-FIELD_MASKSB64 = "MasksB64"
-FIELD_ACTIVEIDX = "ActiveIndex"
 FIELD_GROUPID = "GroupId"
-FIELD_EXTRA = "Extra"
 FIELD_SORTKEY = "SortKey"
 FIELD_TITLE = "Title"
 FIELD_EXPLANATION = "Explanation"
@@ -609,7 +607,7 @@ def ensure_note_type() -> None:
 
     def _apply_field_ui_defaults(model: dict) -> None:
         # 例：見た目に直接関係しないものを折りたたむ（好みで調整OK）
-        for fn in [FIELD_IMAGEFILE, FIELD_INTERNAL]:
+        for fn in [FIELD_IMAGEFILE, FIELD_INTERNAL, FIELD_GROUPID]:
             _set_field_collapsed(model, fn, True)
 
         # 表示上触りやすいものは開いたまま（必要なら True にしてOK）
@@ -832,23 +830,6 @@ def _import_qimage_to_media(img: QImage, prefix: str = "clipboard") -> str | Non
     return filename
 
 
-def _encode_masks(masks: list[dict]) -> str:
-    payload = {"v": 1, "masks": masks}
-    txt = json.dumps(payload, ensure_ascii=False)
-    return base64.b64encode(txt.encode("utf-8")).decode("ascii")
-
-
-def _decode_masks(b64: str) -> list[dict]:
-    try:
-        raw = base64.b64decode(b64.encode("ascii"), validate=False)
-        obj = json.loads(raw.decode("utf-8", errors="replace"))
-        masks = obj.get("masks")
-        if isinstance(masks, list):
-            return cast(list[dict], masks)
-    except Exception:
-        pass
-    return []
-
 
 def _pack_internal(
     image_filename: str,
@@ -894,6 +875,30 @@ def _int_or0(s: Any) -> int:
         return int(str(s).strip())
     except Exception:
         return 0
+
+
+def _note_get_str(note: Any, field_name: str, default: str = "") -> str:
+    """Best-effort read of a note field across Anki builds.
+
+    Some Anki builds expose Note as a mapping with __getitem__ only;
+    others also provide .get(). We want to avoid KeyError when a legacy
+    field is missing from the model.
+    """
+    if note is None:
+        return default
+
+    try:
+        if hasattr(note, "get"):
+            v = note.get(field_name, default)
+            return str(v or "")
+    except Exception:
+        pass
+
+    try:
+        v = note[field_name]
+        return str(v or "")
+    except Exception:
+        return default
 
 
 def _media_data_url_scaled(filename: str, max_side: int = 1600, jpeg_quality: int = 85) -> str:
@@ -1537,7 +1542,7 @@ class MaskEditorDialog(QDialog):
         if not mw.col or not self.existing_note_id:
             return
         note = mw.col.get_note(self.existing_note_id)
-        internal_raw = (note.get(FIELD_INTERNAL, "") if hasattr(note, "get") else note[FIELD_INTERNAL]) or ""
+        internal_raw = _note_get_str(note, FIELD_INTERNAL, "")
         internal = _unpack_internal(internal_raw)
 
         if internal:
@@ -1548,18 +1553,15 @@ class MaskEditorDialog(QDialog):
 
             # fallback for older notes or partial payloads
             if not self.image_filename:
-                self.image_filename = note[FIELD_IMAGEFILE] or ""
+                self.image_filename = _note_get_str(note, FIELD_IMAGEFILE, "")
             if not self.group_id:
-                self.group_id = note[FIELD_GROUPID] or ""
-            if not self.masks:
-                self.masks = _decode_masks(note[FIELD_MASKSB64] or "")
+                self.group_id = _note_get_str(note, FIELD_GROUPID, "")
         else:
-            self.image_filename = note[FIELD_IMAGEFILE] or ""
-            self.group_id = note[FIELD_GROUPID] or ""
-            self.masks = _decode_masks(note[FIELD_MASKSB64] or "")
+            self.image_filename = _note_get_str(note, FIELD_IMAGEFILE, "")
+            self.group_id = _note_get_str(note, FIELD_GROUPID, "")
         
-        self.title = note.get(FIELD_TITLE, "") if hasattr(note, "get") else note[FIELD_TITLE] or ""
-        self.explanation = note.get(FIELD_EXPLANATION, "") if hasattr(note, "get") else note[FIELD_EXPLANATION] or ""
+        self.title = _note_get_str(note, FIELD_TITLE, "")
+        self.explanation = _note_get_str(note, FIELD_EXPLANATION, "")
 
         self.status.setText(f"Editing group: {self.group_id}\nImage: {self.image_filename}")
 
@@ -1919,7 +1921,7 @@ class MaskEditorDialog(QDialog):
         if extra_nids:
             msg = (
                 f"This group has {len(extra_nids)} extra note(s).\n"
-                f"(ActiveIndex >= {len(masks)})\n\n"
+                f"(active index >= {len(masks)})\n\n"
                 "Delete them?"
             )
             if askUser(msg, parent=self):
