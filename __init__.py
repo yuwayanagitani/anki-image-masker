@@ -580,6 +580,7 @@ def ensure_note_type() -> None:
     <div class="aioe-title">{_fld(FIELD_TITLE)}</div>
     <div class="aioe-center">
       <div id="aioe-root" {_data_attrs("front")}>
+      <script class="aioe-internal" type="application/json">{{InternalData}}</script>
         {_fld(FIELD_IMAGEHTML)}
       </div>
     </div>
@@ -590,6 +591,7 @@ def ensure_note_type() -> None:
     <div class="aioe-title">{_fld(FIELD_TITLE)}</div>
     <div class="aioe-center">
       <div id="aioe-root" {_data_attrs("back")}>
+      <script class="aioe-internal" type="application/json">{{InternalData}}</script>
         {_fld(FIELD_IMAGEHTML)}
       </div>
     </div>

@@ -6,6 +6,26 @@
     catch (e) { try { return atob(b64 || ""); } catch (_) { return ""; } }
   }
 
+function aioeParseInternalFromDom(root) {
+  try {
+    const el = root.querySelector("script.aioe-internal");
+    if (!el) return null;
+    const txt = (el.textContent || "").trim();
+    if (!txt) return null;
+
+    const obj = JSON.parse(txt);
+    if (!obj || typeof obj !== "object") return null;
+    if ((obj.v | 0) < 1) return null;
+
+    const masks = Array.isArray(obj.masks) ? obj.masks : null;
+    const active = Number.isFinite(Number(obj.active)) ? Number(obj.active) : 0;
+    if (!masks) return null;
+    return { masks, active };
+  } catch (e) {
+    return null;
+  }
+}
+
   function parseMasksB64(b64) {
     const txt = b64ToUtf8(b64);
     try { return JSON.parse(txt); } catch (e) { return { v: 1, masks: [] }; }
@@ -79,10 +99,22 @@
 
   function initOne(root) {
     const side = root.getAttribute("data-side") || "front";
-    const activeIndex = parseInt(root.getAttribute("data-active") || "0", 10) || 0;
-    const masksB64 = root.getAttribute("data-masks-b64") || "";
-    const parsed = parseMasksB64(masksB64);
-    const masks = Array.isArray(parsed.masks) ? parsed.masks : [];
+
+    // 1) Prefer InternalData (Phase 2)
+    const internal = aioeParseInternalFromDom(root);
+    let activeIndex = 0;
+    let masks = [];
+ 
+    if (internal) {
+      activeIndex = (internal.active | 0);
+      masks = Array.isArray(internal.masks) ? internal.masks : [];
+    } else {
+      // 2) Fallback: legacy data-* attrs (Phase 1 compatibility)
+      activeIndex = parseInt(root.getAttribute("data-active") || "0", 10) || 0;
+      const masksB64 = root.getAttribute("data-masks-b64") || "";
+      const parsed = parseMasksB64(masksB64);
+      masks = Array.isArray(parsed.masks) ? parsed.masks : [];
+    }
 
     const style = {
       fill_front: root.getAttribute("data-fill-front") || "",
