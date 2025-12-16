@@ -56,7 +56,6 @@ FIELD_EXTRA = "Extra"
 FIELD_SORTKEY = "SortKey"
 FIELD_TITLE = "Title"
 FIELD_EXPLANATION = "Explanation"
-FIELD_MASKLABEL = "MaskLabel"
 FIELD_NO = "No"
 FIELD_INTERNAL = "InternalData"
 
@@ -610,7 +609,7 @@ def ensure_note_type() -> None:
 
     def _apply_field_ui_defaults(model: dict) -> None:
         # 例：見た目に直接関係しないものを折りたたむ（好みで調整OK）
-        for fn in [FIELD_IMAGEFILE, FIELD_MASKSB64, FIELD_ACTIVEIDX, FIELD_GROUPID, FIELD_MASKLABEL, FIELD_INTERNAL]:
+        for fn in [FIELD_IMAGEFILE, FIELD_INTERNAL]:
             _set_field_collapsed(model, fn, True)
 
         # 表示上触りやすいものは開いたまま（必要なら True にしてOK）
@@ -638,7 +637,6 @@ def ensure_note_type() -> None:
         FIELD_NO,
         FIELD_IMAGEFILE,
         FIELD_GROUPID,
-        FIELD_MASKLABEL,  
         FIELD_INTERNAL,  
     ]
 
@@ -857,7 +855,6 @@ def _pack_internal(
     group_id: str,
     active_index: int,
     masks: list[dict],
-    mask_label: str = "",
 ) -> str:
     """
     Phase 1: store a consolidated internal JSON payload while keeping legacy fields.
@@ -869,7 +866,6 @@ def _pack_internal(
         "group": group_id or "",
         "active": int(active_index),
         "masks": masks if isinstance(masks, list) else [],
-        "mask_label": mask_label or "",
     }
     try:
         return json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
@@ -1851,21 +1847,18 @@ class MaskEditorDialog(QDialog):
             note[FIELD_IMAGEHTML] = f'<img class="aioe-img" src="{image_filename}">'
             note[FIELD_GROUPID] = group_id
 
-            mask_label = (m.get("label", "") if isinstance(m, dict) else "")
             no = i + 1
             title_primary = (self.title or image_filename)
 
             note[FIELD_NO] = str(no)
             note[FIELD_SORTKEY] = f"{title_primary} #{no:03d}"
             note[FIELD_TITLE] = self.title
-            note[FIELD_MASKLABEL] = mask_label
             note[FIELD_EXPLANATION] = self.explanation
             note[FIELD_INTERNAL] = _pack_internal(
                 image_filename=image_filename,
                 group_id=group_id,
                 active_index=i,
                 masks=masks,
-                mask_label=mask_label,
             )
 
             mw.col.add_note(note, deck_id)
@@ -1899,21 +1892,18 @@ class MaskEditorDialog(QDialog):
             note[FIELD_IMAGEFILE] = image_filename
             note[FIELD_IMAGEHTML] = f'<img class="aioe-img" src="{image_filename}">'
 
-            mask_label = (m.get("label", "") if isinstance(m, dict) else "")
             no = i + 1
             title_primary = (self.title or image_filename)
 
             note[FIELD_NO] = str(no)
             note[FIELD_SORTKEY] = f"{title_primary} #{no:03d}"
             note[FIELD_TITLE] = self.title
-            note[FIELD_MASKLABEL] = mask_label
             note[FIELD_EXPLANATION] = self.explanation
             note[FIELD_INTERNAL] = _pack_internal(
                 image_filename=image_filename,
                 group_id=group_id,
                 active_index=i,
                 masks=masks,
-                mask_label=mask_label,
             )
             note.flush()
 
