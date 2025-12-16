@@ -132,37 +132,26 @@ def _invalidate_config_cache(*args, **kwargs) -> None:
 
 
 def _request_reviewer_redraw() -> None:
-    """Best-effort: re-render the current review card so new mask colors apply immediately."""
+    """Force redraw of the current reviewer card so mask colors update immediately."""
     try:
+        from aqt import mw  # type: ignore
         if not mw or not getattr(mw, "reviewer", None):
             return
-        # only matters during review
-        if getattr(mw, "state", "") not in ("review", "overview"):
+        r = mw.reviewer
+        if not r or not getattr(r, "web", None):
             return
-    except Exception:
-        return
 
-    # 1) try runtime-side re-init (cheap)
-    try:
-        mw.reviewer.web.eval("window.aioeRuntimeRedraw && window.aioeRuntimeRedraw();")
-    except Exception:
-        pass
+        # Call our runtime hook if present
+        js = "try{window.aioeRuntimeRedraw&&window.aioeRuntimeRedraw();}catch(e){}"
+        r.web.eval(js)
 
-    # 2) force Anki reviewer re-render (API varies by version)
-    for name in ("_redraw_current_card", "redraw_current_card", "refresh", "_refresh"):
+        # Some Anki builds benefit from a follow-up repaint
         try:
-            fn = getattr(mw.reviewer, name, None)
-            if callable(fn):
-                fn()
-                break
+            r.web.eval("try{document.body&&document.body.offsetHeight;}catch(e){}")
         except Exception:
             pass
-
-    # 3) re-init again after DOM changed
-    try:
-        mw.reviewer.web.eval("window.aioeRuntimeRedraw && window.aioeRuntimeRedraw();")
     except Exception:
-        pass
+        return
 
 
 def _invalidate_config_cache_keep_json(json_text: str, *args, **kwargs) -> str:
