@@ -130,6 +130,41 @@ def _invalidate_config_cache(*args, **kwargs) -> None:
     _CFG_CACHE = None
 
 
+
+def _request_reviewer_redraw() -> None:
+    """Best-effort: re-render the current review card so new mask colors apply immediately."""
+    try:
+        if not mw or not getattr(mw, "reviewer", None):
+            return
+        # only matters during review
+        if getattr(mw, "state", "") not in ("review", "overview"):
+            return
+    except Exception:
+        return
+
+    # 1) try runtime-side re-init (cheap)
+    try:
+        mw.reviewer.web.eval("window.aioeRuntimeRedraw && window.aioeRuntimeRedraw();")
+    except Exception:
+        pass
+
+    # 2) force Anki reviewer re-render (API varies by version)
+    for name in ("_redraw_current_card", "redraw_current_card", "refresh", "_refresh"):
+        try:
+            fn = getattr(mw.reviewer, name, None)
+            if callable(fn):
+                fn()
+                break
+        except Exception:
+            pass
+
+    # 3) re-init again after DOM changed
+    try:
+        mw.reviewer.web.eval("window.aioeRuntimeRedraw && window.aioeRuntimeRedraw();")
+    except Exception:
+        pass
+
+
 def _invalidate_config_cache_keep_json(json_text: str, *args, **kwargs) -> str:
     """For *_will_save_json hooks: must return JSON string."""
     _invalidate_config_cache()
@@ -511,6 +546,11 @@ class ConfigDialog(QDialog):
 
         try:
             ensure_note_type()
+        except Exception:
+            pass
+
+        try:
+            _request_reviewer_redraw()
         except Exception:
             pass
 

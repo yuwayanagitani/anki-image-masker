@@ -135,4 +135,7 @@
     init();
   }
   setTimeout(init, 0);
+
+  // Expose for Anki-side forced redraw (e.g., after settings change)
+  window.aioeRuntimeRedraw = init;
 })();
