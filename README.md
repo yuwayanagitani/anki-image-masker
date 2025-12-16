@@ -1,186 +1,97 @@
-# 🟨🖼️✨ AI Image Masker (Anki Add-on)
+# 🧠 AI Masker for Anki (Image Masker / Grouped Occlusion)
 
-**AI Image Masker** is an Image Occlusion–style add-on for Anki.  
-It lets you pick an image, draw masks (occlusions) in a built-in editor, and generate review cards from those masks.
-
-It also includes **optional AI features**:
-- 🤖 **AI mask suggestions** (auto-propose regions to hide)
-- 🧠 **AI metadata generation** (auto-generate a Title / Explanation)
-
-> Works best for anatomy diagrams, histology, pathology slides, charts, maps, and any “label-the-picture” learning.
+**AI Masker** (a.k.a **Image Masker**) is an Anki add-on that lets you **create multiple image-occlusion cards at once** by drawing masks on an image and exporting them as a group — super useful for diagrams, charts, and annotated figures.
 
 ---
 
-## 🌈 What it does
+## 🔗 AnkiWeb Page
 
-### ✅ Core (no AI required)
-- Creates (or updates) an **Image Masker** note type with the required fields and templates
-- Opens a WebView-based editor where you can:
-  - pick an image from file
-  - (optionally) import an image from the clipboard
-  - draw masks on top of the image
-  - export those masks into Anki notes/cards
+This add-on is officially published on **AnkiWeb**:
 
-### 🤖 Optional AI
-If enabled in config, the add-on can:
-- suggest masks automatically (**AI suggest…**)
-- generate **Title** / **Explanation** text from the image
+👉 https://ankiweb.net/shared/info/553055768 :contentReference[oaicite:1]{index=1}
 
-AI is **off by default**.
+Installing from AnkiWeb is recommended for easy setup and **automatic updates**.
 
 ---
 
-## 🚀 Quick Start
+## 🎯 Features
 
-### 1) Install
-Install via AnkiWeb (recommended) or place the add-on folder in your `addons21` directory, then restart Anki.
-
-### 2) Create / edit an Image Masker note
-In the **Add Cards editor**, you will see a button (configurable) that opens the Image Masker editor:
-
-- **Create / edit image occlusion notes** (tooltip)
-
-Inside the editor:
-1. Click **Pick image…** and choose a file
-2. Draw masks (occlusions)
-3. Click **Create cards**
-
-The add-on will create/update notes and you can start reviewing.
+- 📌 Draw **multiple masks** on a single image  
+- 📦 Export all masked regions as a **group of new occlusion cards**  
+- 🖼️ Designed for charts, diagrams, anatomy images, and complex visuals  
+- 🎯 Saves time vs. creating occlusions one by one  
+- 🔧 Integrates with Anki’s card creation workflows  
 
 ---
 
-## 🧩 How cards are stored
+## 🚀 How It Works
 
-The add-on uses a dedicated note type named:
+1. In the **Anki card editor**, insert an image you want to occlude.  
+2. Trigger **AI Masker** to start drawing mask rectangles.  
+3. Draw multiple masks covering different regions of the image.  
+4. Once done, export — and all masks become separate occlusion cards automatically.
 
-- **Image Masker** (default, configurable)
-
-Key fields used by the note type include:
-- `ImageFile` / `ImageHTML`
-- `MasksB64` (base64-encoded mask payload)
-- `ActiveIndex`, `GroupId`
-- `Title`, `Explanation`, `No`, `SortKey`
-- `MaskLabel` (for labeling masks / groups)
-
-To improve compatibility with Anki’s **Media Check**, the add-on migrates existing notes so that `ImageHTML` contains an `<img src="...">` reference to your media file (best-effort, capped per session).
+This workflow dramatically speeds up making cards from visual materials with lots of labels or sub-parts.
 
 ---
 
-## 🧠 AI Features (optional)
+## 📦 Installation
 
-### ✅ AI mask suggestions
-When enabled, the editor button **AI suggest…** becomes available.
+### 🔹 Install from AnkiWeb (Recommended)
 
-- Provider: `openai` or `gemini`
-- The image is **downscaled for AI** (does not modify the original media file)
-
-If AI is disabled, you’ll see:
-- “AI is disabled in config (04_ai.enable_ai).”
-
-### ✅ AI Title / Explanation generation
-When enabled, the add-on can generate:
-- `Title`
-- `Explanation`
-
-If metadata AI is disabled, you’ll see:
-- “Metadata AI is disabled in config (04_ai.enable_metadata_ai).”
+1. Open **Anki**  
+2. Navigate to **Tools → Add-Ons → Browse & Install**  
+3. Search for **Image Masker** or enter the code from AnkiWeb  
+4. Install and **restart Anki**
 
 ---
 
-## 🎛️ Settings (Config GUI)
+## 📖 Usage
 
-Open:
-- **Tools → Add-ons → AI Image Masker → Config**
+### Create Multiple Image Occlusion Cards
 
-This add-on uses **nested config keys only** (legacy/flat keys are not supported).
-
-### 01_general
-- `enabled` (default: true)
-- `note_type_name` (default: `"Image Masker"`)
-- `always_update_note_type_templates` (kept as an option; safe)
-- `auto_open_browser_after_create` (reserved)
-
-### 02_editor
-- `add_editor_button` (default: true)
-- `editor_button_label` (default: icon)
-- `editor_button_tooltip`
-
-### 03_masks (colors & outline)
-- `default_fill_front` (active mask fill)
-- `default_fill_other` (other masks fill)
-- `default_stroke` (outline color)
-- `outline_width_px`
-
-### 04_ai
-- `enable_ai` (default: false)
-- `enable_metadata_ai` (default: false)
-- `provider` (`openai` / `gemini`)
-- `max_suggestions`
-
-Provider-specific blocks:
-
-**OpenAI**
-- `api_key_env` (default: `OPENAI_API_KEY`)
-- `base_url` (default: `https://api.openai.com/v1/responses`)
-- `model` (default: `gpt-4.1-mini`)
-- `timeout_sec`
-- `max_output_tokens`
-
-**Gemini**
-- `api_key_env` (default: `GEMINI_API_KEY`)
-- `endpoint` (default uses `{model}` template)
-- `model` (default: `gemini-2.5-flash`)
-- `timeout_sec`
-- `max_output_tokens`
-
-### 05_image_processing
-Controls image scaling/quality for different purposes:
-
-- `display` (image shown in the editor WebView)
-- `ai_suggest` (image sent to AI for mask suggestions)
-- `ai_metadata` (image sent to AI for title/explanation)
-
-Each has:
-- `max_side_px`
-- `jpeg_quality`
+1. Open a card in the **card editor**  
+2. Insert your target image (diagram, chart, etc.)  
+3. From the editor menu, select **AI Masker / Grouped Occlusion**  
+4. Draw rectangles over all parts you want to mask  
+5. Click **Export / Create Cards**  
+6. New occlusion cards will be generated for each mask
 
 ---
 
-## 🛠️ Troubleshooting
+## ⚙️ Tips & Best Practices
 
-### “Image Masker is disabled in config.”
-Enable:
-- `01_general.enabled = true`
-
-### “This note is not an Image Masker note.”
-You opened the editor on a note that isn’t using the Image Masker note type.
-
-### “Pick an image first.”
-Select an image before exporting/creating cards.
-
-### Clipboard import doesn’t work
-The add-on can wait for a clipboard image:
-- “📋 Waiting for next clipboard image… (copy an image to continue)”
-
-Some OS/app combinations do not provide images to the clipboard in a compatible way.
-
-### AI buttons are disabled
-Enable:
-- `04_ai.enable_ai` for mask suggestions
-- `04_ai.enable_metadata_ai` for title/explanation generation
-
-Also ensure your environment variable API key is set.
+- Use with **high-resolution images** for clear occlusions.  
+- For diagrams with many labels, mask in **logical chunks** (e.g., regions rather than tiny text).  
+- You can edit mask positions before exporting.  
+- After export, tweak the card templates if you want custom style or formatting.
 
 ---
 
-## 🔒 Privacy
+## 🛠 Troubleshooting
 
-If AI is enabled, the add-on may send a **downscaled copy** of your image to the selected provider (OpenAI / Google Gemini).  
-Do not use sensitive or private images unless you understand and accept the provider’s data handling policies.
-
-If AI is disabled, everything stays local.
+| Issue | Solution |
+|-------|----------|
+| Masks aren’t exporting | Ensure the image is saved and visible in the editor |
+| Occlusion cards overlap | Adjust mask placements manually |
+| Add-on not visible | Restart Anki or reinstall from AnkiWeb |
+| Exported cards missing fields | Make sure your note type has the occlusion fields |
 
 ---
 
 ## 📜 License
-See `LICENSE` in this repository.
+
+This add-on is provided under the **MIT License** (see `LICENSE`).
+
+---
+
+## 🔧 Related Add-Ons
+
+You might also like:
+
+- **AI Card Explainer** – Adds explanations to cards  
+- **AI Card Splitter** – Break large cards into smaller ones  
+- **AI Card Translator** – Translate cards during review  
+- **HTML Exporter for Anki** – Export cards as HTML / PDF
+
+These tools can be used together to build an **AI-augmented Anki workflow**.
