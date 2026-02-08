@@ -1546,7 +1546,7 @@ class MaskEditorDialog(QDialog):
         self.btnExit = QPushButton("Exit")
 
         self.btnAISuggest.setEnabled(bool(_cfg_get(["04_ai", "enable_ai"], False)))
-        
+
         # Set tooltips to clarify button functions
         self.btnHide.setToolTip("Hide the dialog (clipboard monitoring continues)")
         self.btnExit.setToolTip("Exit and stop clipboard monitoring")
@@ -1601,10 +1601,10 @@ class MaskEditorDialog(QDialog):
     def _destroy_dialog(self) -> None:
         """Fully destroy the dialog with proper cleanup."""
         global _DIALOG
-        
+
         # Stop clipboard monitoring
         self._stop_wait_clipboard()
-        
+
         # Disconnect clipboard signal to prevent further callbacks
         try:
             cb = QGuiApplication.clipboard()
@@ -1612,13 +1612,13 @@ class MaskEditorDialog(QDialog):
         except Exception:
             # Signal might not be connected or already disconnected
             pass
-        
+
         # Clear the singleton reference so a new instance can be created
         _DIALOG = None
-        
+
         # Mark as hidden to prevent any pending operations
         self._hidden = True
-        
+
         # Close and destroy the dialog
         self.close()
         self.deleteLater()
