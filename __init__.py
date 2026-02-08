@@ -646,6 +646,12 @@ def ensure_note_type() -> None:
     .aioe-explanation:empty {
     display: none;
     }
+
+    .aioe-explanation img {
+        max-width: 400px;
+        display: block;
+        margin: 10px auto;
+    }
     """
 
     def _data_attrs(side: str) -> str:
