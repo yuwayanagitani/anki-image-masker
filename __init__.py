@@ -1519,7 +1519,7 @@ class MaskEditorDialog(QDialog):
         self.setMinimumSize(1100, 700)
         self.setModal(False)
         self.setWindowModality(Qt.WindowModality.NonModal)
-        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False)
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
 
         self.mode: str = "create"  # "create" | "edit"
         self.existing_note_id: Optional[int] = None
@@ -1542,7 +1542,8 @@ class MaskEditorDialog(QDialog):
         self.btnPick = QPushButton("Pick image…")
         self.btnAISuggest = QPushButton("AI suggest…")
         self.btnExport = QPushButton("Create cards")
-        self.btnClose = QPushButton("Close")
+        self.btnHide = QPushButton("Hide")
+        self.btnExit = QPushButton("Exit")
 
         self.btnAISuggest.setEnabled(bool(_cfg_get(["04_ai", "enable_ai"], False)))
 
@@ -1554,7 +1555,8 @@ class MaskEditorDialog(QDialog):
         top.addWidget(self.btnAISuggest)
         top.addStretch(1)
         top.addWidget(self.btnExport)
-        top.addWidget(self.btnClose)
+        top.addWidget(self.btnHide)
+        top.addWidget(self.btnExit)
 
         lay = QVBoxLayout(self)
         lay.addLayout(top)
@@ -1564,7 +1566,8 @@ class MaskEditorDialog(QDialog):
         self.btnPick.clicked.connect(self._pick_image)
         self.btnAISuggest.clicked.connect(self._ai_suggest)
         self.btnExport.clicked.connect(self._trigger_export)
-        self.btnClose.clicked.connect(self._hide_only)
+        self.btnHide.clicked.connect(self._hide_only)
+        self.btnExit.clicked.connect(self._destroy_dialog)
 
         self._load_editor_html()
 
@@ -1583,12 +1586,38 @@ class MaskEditorDialog(QDialog):
         self.web.setHtml(html, QUrl(mw.serverURL()))
 
     def closeEvent(self, ev) -> None:
-        self._hide_only()
-        ev.ignore()
+        """Window close button (X) destroys the dialog."""
+        self._destroy_dialog()
+        ev.accept()
 
     def _hide_only(self) -> None:
         self._hidden = True
         self.hide()
+
+    def _destroy_dialog(self) -> None:
+        """Fully destroy the dialog with proper cleanup."""
+        global _DIALOG
+        
+        # Stop clipboard monitoring
+        self._stop_wait_clipboard()
+        
+        # Disconnect clipboard signal to prevent further callbacks
+        try:
+            cb = QGuiApplication.clipboard()
+            cb.dataChanged.disconnect(self._on_clipboard_changed)
+        except Exception:
+            # Signal might not be connected or already disconnected
+            pass
+        
+        # Clear the singleton reference so a new instance can be created
+        _DIALOG = None
+        
+        # Mark as hidden to prevent any pending operations
+        self._hidden = True
+        
+        # Close and destroy the dialog
+        self.close()
+        self.deleteLater()
 
     def open_create(self) -> None:
         self._stop_wait_clipboard()
