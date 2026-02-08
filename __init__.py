@@ -1546,6 +1546,10 @@ class MaskEditorDialog(QDialog):
         self.btnExit = QPushButton("Exit")
 
         self.btnAISuggest.setEnabled(bool(_cfg_get(["04_ai", "enable_ai"], False)))
+        
+        # Set tooltips to clarify button functions
+        self.btnHide.setToolTip("Hide the dialog (clipboard monitoring continues)")
+        self.btnExit.setToolTip("Exit and stop clipboard monitoring")
 
         self.status = QLabel("")
         self.status.setWordWrap(True)
